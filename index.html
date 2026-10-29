@@ -3083,7 +3083,7 @@
       );
     }
 
-    function Sidebar({ temporada, setTemporada, comp, setComp, proximos, resultados, selId, onSelecionar, carregando, progresso, erro, onTentar, confDe }) {
+    function Sidebar({ temporada, setTemporada, comp, setComp, busca, setBusca, filtroAdv, adversarios, proximos, resultados, selId, onSelecionar, carregando, progresso, erro, onTentar, confDe }) {
       const resumo = useMemo(() => {
         const fin = resultados.filter((e) => e.resultado);
         return {
@@ -3096,7 +3096,7 @@
       for (let a = ANO_ATUAL; a > PRIMEIRO_ANO_HISTORIA; a--) anos.push(a);
       const todas = temporada === 'todas';
       const [limite, setLimite] = useState(150);
-      useEffect(() => setLimite(150), [temporada, comp]);
+      useEffect(() => setLimite(150), [temporada, comp, busca]);
       let anoAnterior = null;
 
       return (
@@ -3119,6 +3119,29 @@
                 </select>
               </label>
             </div>
+            <label className="block text-xs text-neutral-400">
+              Adversário
+              <div className="relative mt-1">
+                <input type="text" list="lista-adversarios" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Ex.: Cruzeiro, Flamengo, Boca Juniors"
+                  aria-label="Buscar adversário" className="w-full rounded-md border border-white/10 bg-breu px-3 py-1.5 pr-8 text-sm text-white placeholder:text-neutral-600" />
+                {busca && <button onClick={() => setBusca('')} aria-label="Limpar busca" className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded px-1.5 text-neutral-400 hover:text-white">✕</button>}
+              </div>
+              <datalist id="lista-adversarios">
+                {adversarios.slice(0, 400).map((g) => <option key={g.chave} value={g.nome} />)}
+              </datalist>
+            </label>
+            {filtroAdv && (
+              filtroAdv.grupos.length === 0 ? (
+                <p className="text-xs text-neutral-500">Nenhum adversário com esse nome nos jogos carregados.{!todas && ' Carregue toda a história para procurar desde 1909.'}</p>
+              ) : filtroAdv.grupos.length > 1 ? (
+                <p className="text-xs text-neutral-500">{filtroAdv.grupos.length} adversários com esse nome: {listaPt(filtroAdv.grupos.slice(0, 4).map((g) => g.nome))}{filtroAdv.grupos.length > 4 ? ' e outros' : ''}. Escolha um na lista para ver só ele.</p>
+              ) : null
+            )}
+            {filtroAdv && !todas && (
+              <button onClick={() => setTemporada('todas')} className="w-full rounded-md border border-ouro/50 bg-ouro/10 px-3 py-2 text-sm font-semibold text-ouro hover:bg-ouro/20">
+                Ver todos os jogos contra {filtroAdv.nome}, desde 1909
+              </button>
+            )}
             {resumo.j > 0 && (
               <div className="grid grid-cols-5 gap-1 text-center">
                 {[['Jogos', resumo.j], ['V', resumo.v], ['E', resumo.e], ['D', resumo.d], ['Gols', `${resumo.gp}:${resumo.gc}`]].map(([r, v]) => (
@@ -3141,7 +3164,9 @@
               </section>
             )}
             <section>
-              <h2 className="px-1 pb-2 text-sm text-neutral-400">{todas ? 'Todos os resultados' : `Resultados de ${temporada}`}</h2>
+              <h2 className="px-1 pb-2 text-sm text-neutral-400">
+                {filtroAdv && filtroAdv.grupos.length ? `Jogos contra ${filtroAdv.nome}${todas ? ', em toda a história' : ` em ${temporada}`}` : todas ? 'Todos os resultados' : `Resultados de ${temporada}`}
+              </h2>
               {carregando && <Carregando texto={todas ? 'Buscando todas as temporadas na ESPN e, antes de 2007, no Galo Digital. Na primeira vez leva alguns minutos.' : 'Buscando jogos…'} progresso={progresso} />}
               {!carregando && !todas && temporada < PRIMEIRO_ANO && resultados.length > 0 && (
                 <p className="mb-2 px-1 text-xs text-neutral-500">Jogos de {temporada} registrados no Galo Digital. Podem faltar partidas que a enciclopédia ainda não tem.</p>
@@ -4437,7 +4462,7 @@
       );
     }
 
-    function Retrospecto({ ev, retrospecto, podeCarregarTudo, onCarregarTudo, onSelecionar, gdConf }) {
+    function Retrospecto({ ev, retrospecto, podeCarregarTudo, onCarregarTudo, onSelecionar, gdConf, onVerTodos }) {
       return (
         <Cartao titulo={`Retrospecto contra ${ev.adversario.nome}`}>
           {retrospecto.jogos.length === 0 ? (
@@ -4462,6 +4487,9 @@
           )}
           {podeCarregarTudo && (
             <button onClick={onCarregarTudo} className="mt-2 text-sm text-ouro underline-offset-4 hover:underline">Carregar todas as temporadas para ver o retrospecto completo</button>
+          )}
+          {onVerTodos && (
+            <button onClick={onVerTodos} className="mt-2 block text-sm text-ouro underline-offset-4 hover:underline">Listar todos os jogos contra {ev.adversario.nome}, desde 1909</button>
           )}
           <RetrospectoGD estado={gdConf} nomeAdv={ev.adversario.nome} />
         </Cartao>
@@ -4488,9 +4516,49 @@
       return estado.id === (ev && ev.id) ? estado : { dados: null, carregando: true };
     }
 
+    /* Cada adversário vira uma chave única, juntando ESPN ("Cruzeiro") e Galo Digital ("Cruzeiro-MG").
+       Nome sem sigla de estado vai para a página do Galo Digital mais frequente com o mesmo nome;
+       as outras (Cruzeiro-RS, Flamengo-PI...) ficam separadas. */
+    const ALIAS_ADV = { 'athletico-pr': 'atletico-pr', 'athletico paranaense': 'atletico-pr' };
+    const temSigla = (n) => /\s*-\s*[A-Z]{2,3}$/.test(n || '');
+    const chaveNome = (n) => { const k = semAcento(n || '').replace(/\s*-\s*/g, '-'); return ALIAS_ADV[k] || k; };
+    function indiceAdversarios(todos) {
+      const contagem = new Map();
+      todos.forEach((e) => {
+        const pg = e.adversario.gdPagina || (temSigla(e.adversario.nome) ? e.adversario.nome : null);
+        if (!pg) return;
+        const b = nomeBaseTime(pg), k = chaveNome(pg);
+        const m = contagem.get(b) || new Map();
+        m.set(k, (m.get(k) || 0) + 1);
+        contagem.set(b, m);
+      });
+      const dominante = new Map([...contagem].map(([b, m]) => [b, [...m].sort((x, y) => y[1] - x[1])[0][0]]));
+      const chaveDe = (e) => {
+        const n = e.adversario.gdPagina || e.adversario.nome;
+        if (temSigla(n)) return chaveNome(n);
+        return dominante.get(nomeBaseTime(n)) || chaveNome(n);
+      };
+      const grupos = new Map();
+      todos.forEach((e) => {
+        const k = chaveDe(e);
+        const g = grupos.get(k) || { chave: k, n: 0, nome: '', data: '', pagina: null };
+        g.n++;
+        if (e.adversario.gdPagina && !g.pagina) g.pagina = e.adversario.gdPagina;
+        // nome mais recente (o da ESPN, quando houver)
+        if (e.data > g.data) { g.data = e.data; g.nome = e.adversario.nome; }
+        grupos.set(k, g);
+      });
+      // Nomes repetidos (Cruzeiro de MG e do RS) ganham a sigla
+      const porNome = new Map();
+      grupos.forEach((g) => porNome.set(semAcento(g.nome), [...(porNome.get(semAcento(g.nome)) || []), g]));
+      porNome.forEach((gs) => { if (gs.length > 1) gs.sort((a, b) => b.n - a.n).slice(1).forEach((g) => { g.nome = g.pagina || g.nome; }); });
+      return { chaveDe, lista: [...grupos.values()].sort((a, b) => b.n - a.n || a.nome.localeCompare(b.nome, 'pt-BR')) };
+    }
+
     function AbaJogos({ mapa, versao, temporada, setTemporada, carregando, progresso, erro, onTentar, selId, setSelId, onVerNoGalo, calSofa }) {
       const confDe = useCallback((e) => conferirComSofa(e, calSofa), [calSofa]);
       const [comp, setComp] = useState('todas');
+      const [busca, setBusca] = useState('');
       const [maximizado, setMaximizado] = useState(false);
       const [minuto, setMinutoEstado] = useState(0);
       const [perfil, setPerfil] = useState(null);
@@ -4516,26 +4584,38 @@
       const quadro = useQuadro(canvasRef, salvarQuadro);
 
       const todos = useMemo(() => [...mapa.current.values()], [versao]);
+      const advs = useMemo(() => indiceAdversarios(todos), [todos]);
+      // Busca por adversário: nome exato escolhido na lista, ou parte do nome
+      const filtroAdv = useMemo(() => {
+        const q = semAcento(busca).replace(/\s+/g, ' ').trim();
+        if (!q) return null;
+        const exato = advs.lista.filter((g) => semAcento(g.nome) === q);
+        const grupos = exato.length ? exato : advs.lista.filter((g) => semAcento(g.nome + ' ' + (g.pagina || '')).includes(q));
+        return { chaves: new Set(grupos.map((g) => g.chave)), grupos, nome: grupos.length === 1 ? grupos[0].nome : busca.trim() };
+      }, [busca, advs]);
+      const passaAdv = (e) => !filtroAdv || filtroAdv.chaves.has(advs.chaveDe(e));
       const resultados = useMemo(() => todos
         .filter((e) => e.estado === 'post')
+        .filter(passaAdv)
         .filter((e) => temporada === 'todas' || anoDe(e.data) === temporada)
         .filter((e) => comp === 'todas' || e.slug === comp)
-        .sort((a, b) => new Date(b.data) - new Date(a.data)), [todos, temporada, comp]);
+        .sort((a, b) => new Date(b.data) - new Date(a.data)), [todos, temporada, comp, filtroAdv, advs]);
       const proximos = useMemo(() => {
         const limite = Date.now() - 4 * 3600e3;
         return todos
           .filter((e) => e.estado === 'in' || (e.estado === 'pre' && !e.adiado && new Date(e.data).getTime() > limite))
           .filter((e) => comp === 'todas' || e.slug === comp)
+          .filter(passaAdv)
           .sort((a, b) => (b.estado === 'in') - (a.estado === 'in') || new Date(a.data) - new Date(b.data))
           .slice(0, 8);
-      }, [todos, comp]);
+      }, [todos, comp, filtroAdv, advs]);
       const retrospecto = useMemo(() => {
         if (!ev) return { jogos: [], v: 0, e: 0, d: 0, total: 0 };
-        const base = nomeBaseTime(ev.adversario.gdPagina || ev.adversario.nome);
-        const jogos = todos.filter((e) => e.resultado && e.id !== ev.id && (e.adversario.id === ev.adversario.id || nomeBaseTime(e.adversario.gdPagina || e.adversario.nome) === base))
+        const k = advs.chaveDe(ev);
+        const jogos = todos.filter((e) => e.resultado && e.id !== ev.id && (e.adversario.id === ev.adversario.id || advs.chaveDe(e) === k))
           .sort((a, b) => new Date(b.data) - new Date(a.data));
         return { jogos, total: jogos.length, v: jogos.filter((j) => j.resultado === 'V').length, e: jogos.filter((j) => j.resultado === 'E').length, d: jogos.filter((j) => j.resultado === 'D').length };
-      }, [todos, ev && ev.id]);
+      }, [todos, advs, ev && ev.id]);
 
       const pre = ev && ev.estado === 'pre';
       const temEscalacaoESPN = !!resumo && !!resumo.escalacoes && resumo.escalacoes.length > 0 && (!pre || !!resumo.confirmada);
@@ -4747,6 +4827,7 @@
         <div className="flex flex-col lg:flex-row">
           <Sidebar
             temporada={temporada} setTemporada={setTemporada} comp={comp} setComp={setComp}
+            busca={busca} setBusca={setBusca} filtroAdv={filtroAdv} adversarios={advs.lista}
             proximos={proximos} resultados={resultados} selId={selId} onSelecionar={setSelId} confDe={confDe}
             carregando={carregando} progresso={progresso} erro={erro} onTentar={onTentar}
           />
@@ -4790,6 +4871,7 @@
                   )}
                   <div className="grid gap-5 2xl:grid-cols-2">
                     <Retrospecto ev={ev} retrospecto={retrospecto} podeCarregarTudo={temporada !== 'todas'} onCarregarTudo={() => setTemporada('todas')} onSelecionar={setSelId}
+                      onVerTodos={() => { const g = advs.lista.find((x) => x.chave === advs.chaveDe(ev)); setBusca(g ? g.nome : ev.adversario.nome); setTemporada('todas'); window.scrollTo(0, 0); }}
                       gdConf={gd.id === ev.id ? { carregando: gd.carregandoConf, c: gd.conf, erro: gd.erroConf } : { carregando: true, c: null }} />
                     {fichaGD && <CartaoFichaGD ficha={fichaGD} ev={ev} />}
                   </div>
