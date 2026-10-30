@@ -5550,6 +5550,347 @@
     /* =========================================================
        9. APP PRINCIPAL
        ========================================================= */
+    /* =========================================================
+       ESTÁDIOS: onde o Galo jogou, como mandante e visitante
+       ========================================================= */
+    // Mesmo estádio com nomes diferentes na ESPN ("Estadio Mineirão", "Mineirao") e no Galo Digital ("Mineirão (Belo Horizonte-MG)")
+    const ESTADIOS_ALIAS = [
+      [/mineir[aã]o|magalh[aã]es pinto/, 'Mineirão', 'Belo Horizonte'],
+      [/independ[eê]ncia|raimundo sampaio/, 'Independência', 'Belo Horizonte'],
+      [/arena mrv/, 'Arena MRV', 'Belo Horizonte'],
+      [/jacare|joaquim henrique nogueira/, 'Arena do Jacaré', 'Sete Lagoas'],
+      [/maracan|mario filho/, 'Maracanã', 'Rio de Janeiro'],
+      [/nilton santos|joao havelange|engenh/, 'Nilton Santos (Engenhão)', 'Rio de Janeiro'],
+      [/sao januario/, 'São Januário', 'Rio de Janeiro'],
+      [/luso.?brasileiro/, 'Luso-Brasileiro', 'Rio de Janeiro'],
+      [/neo quimica|arena corinthians|itaquer/, 'Neo Química Arena', 'São Paulo'],
+      [/allianz|palestra italia|parque ant[aá]r/, 'Allianz Parque (Palestra Itália)', 'São Paulo'],
+      [/morumb|cicero pompeu/, 'Morumbi', 'São Paulo'],
+      [/pacaembu/, 'Pacaembu', 'São Paulo'],
+      [/caninde/, 'Canindé', 'São Paulo'],
+      [/vila belmiro|urbano caldeira/, 'Vila Belmiro', 'Santos'],
+      [/nabi abi chedid|cicero de souza marques/, 'Nabi Abi Chedid', 'Bragança Paulista'],
+      [/moises lucarelli/, 'Moisés Lucarelli', 'Campinas'],
+      [/brinco de ouro/, 'Brinco de Ouro', 'Campinas'],
+      [/couto pereira/, 'Couto Pereira', 'Curitiba'],
+      [/petraglia|arena da baixada|joaquim americo|kyocera|ligga/, 'Arena da Baixada', 'Curitiba'],
+      [/durival de britto|vila capanema/, 'Vila Capanema', 'Curitiba'],
+      [/pinheirao/, 'Pinheirão', 'Curitiba'],
+      [/beira.?rio|jose pinheiro borda/, 'Beira-Rio', 'Porto Alegre'],
+      [/arena do gremio|gremio arena/, 'Arena do Grêmio', 'Porto Alegre'],
+      [/olimpico monumental/, 'Olímpico Monumental', 'Porto Alegre'],
+      [/alfredo jaconi/, 'Alfredo Jaconi', 'Caxias do Sul'],
+      [/orlando scarpelli/, 'Orlando Scarpelli', 'Florianópolis'],
+      [/ressacada/, 'Ressacada', 'Florianópolis'],
+      [/conda/, 'Arena Condá', 'Chapecó'],
+      [/heriberto hulse/, 'Heriberto Hülse', 'Criciúma'],
+      [/ilha do retiro/, 'Ilha do Retiro', 'Recife'],
+      [/aflitos/, 'Aflitos', 'Recife'],
+      [/arruda|jose do rego maciel/, 'Arruda', 'Recife'],
+      [/arena pernambuco/, 'Arena Pernambuco', 'São Lourenço da Mata'],
+      [/fonte nova/, 'Arena Fonte Nova', 'Salvador'],
+      [/barradas|barradao/, 'Barradão', 'Salvador'],
+      [/pituacu|roberto santos/, 'Pituaçu', 'Salvador'],
+      [/serra dourada/, 'Serra Dourada', 'Goiânia'],
+      [/antonio accioly/, 'Antônio Accioly', 'Goiânia'],
+      [/haile pinheiro/, 'Hailé Pinheiro', 'Goiânia'],
+      [/pedro ludovico/, 'Olímpico Pedro Ludovico', 'Goiânia'],
+      [/mane garrincha/, 'Mané Garrincha', 'Brasília'],
+      [/arena pantanal/, 'Arena Pantanal', 'Cuiabá'],
+      [/mangueirao/, 'Mangueirão', 'Belém'],
+      [/baenao|evandro almeida/, 'Baenão', 'Belém'],
+      [/raulino de oliveira/, 'Raulino de Oliveira', 'Volta Redonda'],
+      [/castor cifuentes/, 'Castor Cifuentes', 'Nova Lima'],
+      [/ipatingao|epaminondas mendes brito/, 'Ipatingão', 'Ipatinga'],
+      [/parque do sabia/, 'Parque do Sabiá', 'Uberlândia'],
+      [/zama maciel/, 'Zama Maciel', 'Patos de Minas'],
+      [/ronaldao|ronaldo junqueira/, 'Ronaldão', 'Poços de Caldas'],
+      [/melao/, 'Melão', 'Varginha'],
+      [/gino maria rossi/, 'Irmão Gino Maria Rossi', 'Pouso Alegre'],
+      [/mario helenio/, 'Mário Helênio', 'Juiz de Fora'],
+      [/bruno jos[eei] daniel/, 'Bruno José Daniel', 'Santo André'],
+      [/castelao|placido castelo/, 'Castelão', 'Fortaleza', /fortaleza|placido/],
+      [/kleber andrade/, 'Kléber Andrade', 'Cariacica'],
+      [/vivaldao|vivaldo lima|arena da amazonia/, 'Arena da Amazônia (Vivaldão)', 'Manaus'],
+      [/uberabao/, 'Uberabão', 'Uberaba'],
+      [/fazendinha|alfredo schurig/, 'Fazendinha (Alfredo Schurig)', 'São Paulo', /sao paulo|schurig/],
+      [/rei pele/, 'Rei Pelé', 'Maceió'],
+      [/el campin|nemesio camacho/, 'El Campín', 'Bogotá'],
+      [/bombonera|alberto j/, 'La Bombonera', 'Buenos Aires'],
+      [/monumental/, 'Monumental de Núñez', 'Buenos Aires', /buenos aires|nunez/],
+      [/gasometro|pedro bidegain/, 'Nuevo Gasómetro', 'Buenos Aires'],
+      [/defensores del chaco/, 'Defensores del Chaco', 'Assunção'],
+      [/hernando siles/, 'Hernando Siles', 'La Paz'],
+      [/centenario/, 'Centenário', 'Montevidéu', /montevid/],
+    ];
+    const cidadeLimpa = (c) => (c || '').replace(/\s*-\s*[A-Z]{2}$/, '').replace(/,.*$/, '').trim();
+    function estadioDe(ev) {
+      const bruto = (ev.estadio || '').trim();
+      if (!bruto || /^n[aã]o informado$/i.test(bruto)) return null;
+      const s = semAcento(bruto), cid = semAcento(ev.cidade || '');
+      for (const [re, nome, cidade, so] of ESTADIOS_ALIAS) {
+        if (re.test(s) && (!so || so.test(cid) || so.test(s))) return { chave: semAcento(nome), nome, cidade };
+      }
+      const nome = bruto.replace(/^(est[aá]dio|estadio|est\.)\s+/i, '').replace(/^(ueno|casa de apostas|mercado livre|brb|tigo)\s+/i, '').replace(/\s*\(old\)\s*/i, '').trim();
+      return { chave: semAcento(nome).replace(/^municipal\s+/, ''), nome, cidade: cidadeLimpa(ev.cidade) };
+    }
+
+    const COR_MANDANTE = '#B8892F', COR_VISITANTE = '#2FA39A';
+    const vazio = () => ({ j: 0, v: 0, e: 0, d: 0 });
+    const aprov = (r) => (r.j ? Math.round(((3 * r.v + r.e) / (3 * r.j)) * 100) : null);
+    const vedTexto = (r) => `${r.v}V ${r.e}E ${r.d}D`;
+
+    function AbaEstadios({ mapa, versao, temporada, setTemporada, carregando, progresso, erro, onTentar, onAbrirJogo }) {
+      const [comp, setComp] = useState('todas');
+      const [mando, setMando] = useState('todos');
+      const [ordem, setOrdem] = useState('jogos');
+      const [busca, setBusca] = useState('');
+      const [aberto, setAberto] = useState(null);
+      const [dica, setDica] = useState(null);
+      const [limite, setLimite] = useState(60);
+      const todas = temporada === 'todas';
+      const anos = [];
+      for (let a = ANO_ATUAL; a > PRIMEIRO_ANO_HISTORIA; a--) anos.push(a);
+
+      const { estadios, semEstadio, totalJogos } = useMemo(() => {
+        const jogos = [...mapa.current.values()]
+          .filter((e) => e.estado === 'post' && e.resultado)
+          .filter((e) => todas || anoDe(e.data) === temporada)
+          .filter((e) => comp === 'todas' || e.slug === comp);
+        const porChave = new Map();
+        let sem = 0;
+        jogos.forEach((ev) => {
+          const est = estadioDe(ev);
+          if (!est) { sem++; return; }
+          const g = porChave.get(est.chave) || { ...est, nomes: new Map(), cidades: new Map(), m: vazio(), vis: vazio(), gp: 0, gc: 0, neutro: 0, primeiro: ev.data, ultimo: ev.data, jogos: [] };
+          const lado = ev.galoCasa ? g.m : g.vis;
+          lado.j++; lado[{ V: 'v', E: 'e', D: 'd' }[ev.resultado]]++;
+          g.gp += ev.golsGalo || 0; g.gc += ev.golsAdv || 0;
+          if (ev.neutro) g.neutro++;
+          if (ev.data < g.primeiro) g.primeiro = ev.data;
+          if (ev.data > g.ultimo) g.ultimo = ev.data;
+          g.nomes.set(est.nome, (g.nomes.get(est.nome) || 0) + 1);
+          if (est.cidade) g.cidades.set(est.cidade, (g.cidades.get(est.cidade) || 0) + 1);
+          g.jogos.push(ev);
+          porChave.set(est.chave, g);
+        });
+        const maisComum = (m) => [...m].sort((a, b) => b[1] - a[1])[0];
+        const lista = [...porChave.values()].map((g) => {
+          const t = { j: g.m.j + g.vis.j, v: g.m.v + g.vis.v, e: g.m.e + g.vis.e, d: g.m.d + g.vis.d };
+          const c = maisComum(g.cidades);
+          return { ...g, nome: maisComum(g.nomes)[0], cidade: c ? c[0] : '', total: t, jogos: g.jogos.sort((a, b) => new Date(b.data) - new Date(a.data)) };
+        });
+        return { estadios: lista, semEstadio: sem, totalJogos: jogos.length };
+      }, [versao, temporada, comp]);
+
+      const lado = (g) => (mando === 'mandante' ? g.m : mando === 'visitante' ? g.vis : g.total);
+      const itens = useMemo(() => {
+        const q = semAcento(busca);
+        const cmp = {
+          jogos: (a, b) => lado(b).j - lado(a).j || a.nome.localeCompare(b.nome, 'pt-BR'),
+          vitorias: (a, b) => lado(b).v - lado(a).v || lado(b).j - lado(a).j,
+          aprov: (a, b) => (lado(b).j >= 5) - (lado(a).j >= 5) || (aprov(lado(b)) ?? -1) - (aprov(lado(a)) ?? -1) || lado(b).j - lado(a).j,
+          recente: (a, b) => b.ultimo.localeCompare(a.ultimo),
+          nome: (a, b) => a.nome.localeCompare(b.nome, 'pt-BR'),
+        }[ordem];
+        return estadios
+          .filter((g) => lado(g).j > 0)
+          .filter((g) => !q || semAcento(g.nome + ' ' + g.cidade).includes(q))
+          .sort(cmp);
+      }, [estadios, mando, ordem, busca]);
+      useEffect(() => { setLimite(60); setAberto(null); }, [temporada, comp, mando, ordem, busca]);
+
+      const topo = [...itens].sort((a, b) => lado(b).j - lado(a).j).slice(0, 12);
+      const maxJ = Math.max(1, ...topo.map((g) => (mando === 'todos' ? g.total.j : lado(g).j)));
+      const casaMais = [...estadios].sort((a, b) => b.m.j - a.m.j)[0];
+      const foraMais = [...estadios].sort((a, b) => b.vis.j - a.vis.j)[0];
+      const sel = 'mt-1 w-full rounded-md border border-white/10 px-2 py-1.5 text-sm text-white';
+
+      return (
+        <div className="aba-estadios mx-auto max-w-6xl space-y-6 p-4 md:p-8">
+          <header>
+            <h1 className="font-placar text-3xl font-bold text-white">Estádios do Galo</h1>
+            <p className="mt-1 max-w-prose text-sm text-neutral-400">
+              Todos os estádios em que o Galo jogou, com o retrospecto como mandante e como visitante. Os jogos desde 2007 vêm da ESPN; os anteriores, do Galo Digital.
+            </p>
+          </header>
+
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+            <label className="text-xs text-neutral-400">Temporada
+              <select value={temporada} onChange={(e) => setTemporada(e.target.value === 'todas' ? 'todas' : Number(e.target.value))} className={sel}>
+                <option value="todas">Toda a história</option>
+                {anos.map((a) => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </label>
+            <label className="text-xs text-neutral-400">Competição
+              <select value={comp} onChange={(e) => setComp(e.target.value)} className={sel}>
+                <option value="todas">Todas</option>
+                {COMPETICOES.map((c) => <option key={c.slug} value={c.slug}>{c.curto}</option>)}
+                <option value="outras">Amistosos e outros torneios</option>
+              </select>
+            </label>
+            <label className="text-xs text-neutral-400">Mando
+              <select value={mando} onChange={(e) => setMando(e.target.value)} className={sel}>
+                <option value="todos">Mandante e visitante</option>
+                <option value="mandante">Só como mandante</option>
+                <option value="visitante">Só como visitante</option>
+              </select>
+            </label>
+            <label className="text-xs text-neutral-400">Ordenar
+              <select value={ordem} onChange={(e) => setOrdem(e.target.value)} className={sel}>
+                <option value="jogos">Mais jogos</option>
+                <option value="vitorias">Mais vitórias</option>
+                <option value="aprov">Melhor aproveitamento (5+ jogos)</option>
+                <option value="recente">Jogo mais recente</option>
+                <option value="nome">Nome</option>
+              </select>
+            </label>
+            <label className="col-span-2 text-xs text-neutral-400 md:col-span-1">Buscar estádio ou cidade
+              <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Ex.: Maracanã, Curitiba" aria-label="Buscar estádio"
+                className="mt-1 w-full rounded-md border border-white/10 bg-breu px-3 py-1.5 text-sm text-white placeholder:text-neutral-600" />
+            </label>
+          </div>
+
+          {!todas && !carregando && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-ouro/30 bg-ouro/10 px-4 py-3 text-sm text-neutral-200">
+              <span>Mostrando só os jogos de {temporada}.</span>
+              <button onClick={() => setTemporada('todas')} className="rounded-md border border-ouro/60 px-3 py-1.5 font-semibold text-ouro hover:bg-ouro/20">Ver toda a história, desde 1909</button>
+            </div>
+          )}
+          {carregando && <Carregando texto={todas ? 'Buscando todas as temporadas na ESPN e, antes de 2007, no Galo Digital. Na primeira vez leva alguns minutos.' : 'Buscando jogos…'} progresso={progresso} />}
+          {!carregando && erro && (
+            <div className="rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-100">
+              {erro}<button onClick={onTentar} className="mt-2 block rounded border border-red-300/40 px-3 py-1 text-xs hover:bg-red-500/20">Tentar de novo</button>
+            </div>
+          )}
+
+          {estadios.length > 0 && (
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <Dado rotulo="Estádios diferentes" valor={estadios.length} />
+              <Dado rotulo="Jogos com estádio informado" valor={totalJogos - semEstadio} />
+              {casaMais && casaMais.m.j > 0 && <Dado rotulo={`Mais jogos como mandante (${casaMais.m.j})`} valor={casaMais.nome} />}
+              {foraMais && foraMais.vis.j > 0 && <Dado rotulo={`Mais jogos como visitante (${foraMais.vis.j})`} valor={foraMais.nome} />}
+            </div>
+          )}
+
+          {topo.length > 0 && (
+            <section className="rounded-xl border border-white/5 bg-carvao p-5">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-sm font-semibold text-neutral-300">Onde o Galo mais jogou</h2>
+                {mando === 'todos' && (
+                  <div className="flex gap-4 text-xs text-neutral-400" aria-label="Legenda">
+                    <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: COR_MANDANTE }}></span>Mandante</span>
+                    <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: COR_VISITANTE }}></span>Visitante</span>
+                  </div>
+                )}
+              </div>
+              <ul className="mt-4 space-y-2.5">
+                {topo.map((g) => {
+                  const partes = mando === 'todos' ? [['mandante', g.m], ['visitante', g.vis]] : [[mando, lado(g)]];
+                  return (
+                    <li key={g.chave} className="grid grid-cols-[minmax(7rem,12rem)_1fr_auto] items-center gap-3 text-sm">
+                      <span className="truncate text-neutral-200" title={`${g.nome}, ${g.cidade}`}>{g.nome}</span>
+                      <div className="relative flex h-3.5 gap-[2px]">
+                        {partes.filter(([, r]) => r.j > 0).map(([k, r]) => (
+                          <div key={k} className="h-full rounded-[4px] cursor-default" style={{ width: `${(r.j / maxJ) * 100}%`, minWidth: 4, background: k === 'mandante' ? COR_MANDANTE : COR_VISITANTE }}
+                            onMouseEnter={() => setDica({ chave: g.chave, k })} onMouseLeave={() => setDica(null)}>
+                            {dica && dica.chave === g.chave && dica.k === k && (
+                              <div className="pointer-events-none absolute -top-9 left-0 z-10 whitespace-nowrap rounded-md border border-white/10 bg-breu px-2 py-1 text-xs text-neutral-200 shadow-lg">
+                                {g.nome}, como {k}: {r.j} {r.j === 1 ? 'jogo' : 'jogos'} ({vedTexto(r)})
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <span className="tabular-nums text-xs text-neutral-400">{mando === 'todos' ? `${g.m.j} + ${g.vis.j}` : lado(g).j}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+
+          <section className="rounded-xl border border-white/5 bg-carvao p-5">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-sm font-semibold text-neutral-300">Todos os estádios</h2>
+              <p className="text-xs text-neutral-500">{itens.length} {itens.length === 1 ? 'estádio' : 'estádios'}. Clique para ver os jogos.</p>
+            </div>
+            {!carregando && itens.length === 0 && <p className="mt-3 text-sm text-neutral-500">Nenhum estádio com esses filtros.</p>}
+            <div className="mt-3 overflow-x-auto">
+              <table className="tabela-estadios w-full min-w-[46rem] text-sm tabular-nums">
+                <thead>
+                  <tr className="text-left text-xs text-neutral-500">
+                    <th className="py-1.5 pr-3 font-normal">Estádio</th>
+                    <th className="py-1.5 pr-3 font-normal">Jogos</th>
+                    <th className="py-1.5 pr-3 font-normal">Como mandante</th>
+                    <th className="py-1.5 pr-3 font-normal">Como visitante</th>
+                    <th className="py-1.5 pr-3 font-normal">Gols</th>
+                    <th className="py-1.5 pr-3 font-normal">Aprov.</th>
+                    <th className="py-1.5 font-normal">Período</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {itens.slice(0, limite).map((g) => {
+                    const abre = aberto === g.chave;
+                    const r = lado(g);
+                    const jogosLista = g.jogos.filter((e) => mando === 'todos' || (mando === 'mandante') === e.galoCasa);
+                    const a1 = anoDe(g.primeiro), a2 = anoDe(g.ultimo);
+                    return (
+                      <React.Fragment key={g.chave}>
+                        <tr className="border-t border-white/5">
+                          <td className="py-2 pr-3">
+                            <button onClick={() => setAberto(abre ? null : g.chave)} aria-expanded={abre} className="text-left hover:text-ouro">
+                              <span className="text-neutral-500">{abre ? '▾' : '▸'}</span> <span className="text-white">{g.nome}</span>
+                              {g.cidade && <span className="block pl-4 text-xs text-neutral-500">{g.cidade}</span>}
+                            </button>
+                          </td>
+                          <td className="py-2 pr-3 text-white">{r.j}</td>
+                          <td className="py-2 pr-3 text-neutral-300">{g.m.j ? <>{g.m.j} <span className="text-xs text-neutral-500">({vedTexto(g.m)})</span></> : '–'}</td>
+                          <td className="py-2 pr-3 text-neutral-300">{g.vis.j ? <>{g.vis.j} <span className="text-xs text-neutral-500">({vedTexto(g.vis)})</span></> : '–'}</td>
+                          <td className="py-2 pr-3 text-neutral-300">{g.gp}:{g.gc}</td>
+                          <td className="py-2 pr-3 text-neutral-300">{aprov(r) != null ? `${aprov(r)}%` : '–'}</td>
+                          <td className="py-2 text-xs text-neutral-500">{a1 === a2 ? a1 : `${a1}–${a2}`}</td>
+                        </tr>
+                        {abre && (
+                          <tr>
+                            <td colSpan={7} className="pb-3">
+                              {g.neutro > 0 && <p className="mb-1 pl-4 text-xs text-neutral-500">Inclui {g.neutro} {g.neutro === 1 ? 'jogo' : 'jogos'} em campo neutro.</p>}
+                              <ul className="max-h-80 overflow-y-auto pl-4">
+                                {jogosLista.map((j) => (
+                                  <li key={j.id}>
+                                    <button onClick={() => onAbrirJogo(j.id)} className="flex w-full items-center gap-3 rounded px-2 py-1 text-left text-sm hover:bg-white/5">
+                                      <span className="w-24 shrink-0 text-neutral-500">{fData.format(new Date(j.data))}</span>
+                                      <span className="w-28 shrink-0 truncate text-xs text-neutral-500">{j.curto}</span>
+                                      <span className="flex-1 truncate text-neutral-300">{j.mandante.nome} {j.mandante.gols}–{j.visitante.gols} {j.visitante.nome}</span>
+                                      <span className={'text-xs ' + (j.resultado === 'V' ? 'text-ouro' : j.resultado === 'D' ? 'text-red-300' : 'text-neutral-400')}>{ESTILO_RES[j.resultado][0]}</span>
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {itens.length > limite && (
+              <button onClick={() => setLimite((l) => l + 100)} className="mt-3 w-full rounded-md border border-white/10 py-2 text-sm text-neutral-300 hover:border-white/30">
+                Mostrar mais ({itens.length - limite} restantes)
+              </button>
+            )}
+            <p className="mt-3 text-xs text-neutral-500">
+              Nomes diferentes do mesmo estádio (como “Estadio Mineirão” e “Mineirão”) foram juntados. O mando segue a súmula: em campo neutro conta quem foi listado como mandante.
+              Vitórias e derrotas nos pênaltis contam como vitória e derrota, como no resto do app.
+              {semEstadio > 0 && ` ${semEstadio} ${semEstadio === 1 ? 'jogo não tem' : 'jogos não têm'} o estádio informado e ficaram de fora.`}
+            </p>
+          </section>
+        </div>
+      );
+    }
+
     const PRIORIDADE = { pre: 0, in: 1, post: 2 };
 
     function App() {
@@ -5563,6 +5904,7 @@
       const [selId, setSelId] = useState(null);
       const [versao, setVersao] = useState(0);
       const [jaAbriuJogadores, setJaAbriuJogadores] = useState(false);
+      const [jaAbriuEstadios, setJaAbriuEstadios] = useState(false);
       const [alvoJogador, setAlvoJogador] = useState(null);
       const [calSofa, setCalSofa] = useState(null);
       const verNoGalo = useCallback(({ id, nome }) => { setAlvoJogador({ id, nome, t: Date.now() }); setJaAbriuJogadores(true); setAba('jogadores'); window.scrollTo(0, 0); }, []);
@@ -5660,7 +6002,8 @@
         if (doAno) { setSelId(doAno.id); temporadaAnterior.current = temporada; }
       }, [temporada, versao]);
 
-      const abrirAba = (k) => { setAba(k); if (k === 'jogadores') setJaAbriuJogadores(true); };
+      const abrirAba = (k) => { setAba(k); if (k === 'jogadores') setJaAbriuJogadores(true); if (k === 'estadios') setJaAbriuEstadios(true); };
+      const abrirJogo = useCallback((id) => { setSelId(id); setAba('jogos'); window.scrollTo(0, 0); }, []);
 
       return (
         <div className="min-h-screen bg-breu">
@@ -5672,7 +6015,7 @@
               </div>
             </div>
             <div className="flex gap-1" role="tablist">
-              {[['jogos', 'Jogos'], ['jogadores', 'Jogadores']].map(([k, rot]) => (
+              {[['jogos', 'Jogos'], ['jogadores', 'Jogadores'], ['estadios', 'Estádios']].map(([k, rot]) => (
                 <button key={k} role="tab" aria-selected={aba === k} onClick={() => abrirAba(k)}
                   className={'rounded-md px-3 py-1.5 text-sm font-semibold transition-colors ' + (aba === k ? 'bg-grafite text-ouro' : 'text-neutral-400 hover:text-white')}>
                   {rot}
@@ -5697,6 +6040,12 @@
             />
           </div>
           {jaAbriuJogadores && <div className={aba === 'jogadores' ? '' : 'hidden'}><AbaJogadores alvo={alvoJogador} /></div>}
+          {jaAbriuEstadios && (
+            <div className={aba === 'estadios' ? '' : 'hidden'}>
+              <AbaEstadios mapa={mapa} versao={versao} temporada={temporada} setTemporada={setTemporada} carregando={carregando} progresso={progresso}
+                erro={erro} onTentar={carregarTemporada} onAbrirJogo={abrirJogo} />
+            </div>
+          )}
           <footer className="agradecimento border-t border-ouro/20 bg-carvao px-5 py-8 md:px-8">
             <div className="mx-auto max-w-4xl">
               <p className="text-xs font-semibold uppercase tracking-wide text-ouro">Agradecimento especial</p>

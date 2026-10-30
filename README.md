@@ -17,6 +17,7 @@ O conteúdo do Galo Digital está sob licença [CC BY-NC-ND 4.0](https://creativ
 - **Jogos do Galo** de 1909 até hoje, com placar, competição, retrospecto contra cada adversário e os próximos jogos, atualizados sozinhos.
 - **Quadro tático** de cada partida, com a escalação real e as substituições, além de desenho de jogadas por fases.
 - **Estatísticas** do jogo: momento da partida, mapa de finalizações e números por jogador.
+- **Estádios** em que o Galo já jogou, com retrospecto como mandante e como visitante, gols, aproveitamento e a lista de jogos em cada um.
 - **Jogadores** desde 2007 (ESPN, Sofascore e Galo Digital) e antes de 2007 (atletas e fichas técnicas do Galo Digital), com favoritos e anotações.
 
 Tudo roda no navegador: não há servidor nem cadastro. Anotações, favoritos e quadros desenhados ficam guardados no próprio navegador, com opção de exportar um backup.
